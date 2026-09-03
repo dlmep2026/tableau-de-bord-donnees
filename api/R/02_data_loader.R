@@ -213,7 +213,50 @@ load_ll_cholera <- function(force = FALSE) {
 #' Recharge toutes les sources de données (force = TRUE) et renvoie
 #' l'heure de la dernière modification de chaque fichier sur disque
 #' (utilisé par /api/v1/status/sync comme proxy de "dernière synchro").
+#' Télécharge les fichiers sources depuis GitHub (URLs "raw") vers data/,
+#' si USE_GITHUB_SOURCES est activé (voir R/00_config.R). Ne re-télécharge
+#' pas un fichier déjà présent localement sauf si force=TRUE. Les URLs
+#' encore au format placeholder ("<owner>...") sont ignorées silencieusement
+#' (permet de garder USE_GITHUB_SOURCES=TRUE en développement local avec des
+#' fichiers déjà présents dans data/).
+download_github_sources <- function(force = FALSE) {
+  if (!isTRUE(USE_GITHUB_SOURCES)) return(invisible(NULL))
+  if (!dir.exists(DATA_DIR)) dir.create(DATA_DIR, recursive = TRUE)
+
+  targets <- list(
+    list(url = GITHUB_SOURCES$overall_mape,     dest = PATH_OVERALL_MAPE),
+    list(url = GITHUB_SOURCES$ll_mpox,          dest = PATH_LL_MPOX),
+    list(url = GITHUB_SOURCES$ll_cholera,       dest = PATH_LL_CHOLERA),
+    list(url = GITHUB_SOURCES$epidemie,         dest = PATH_EPIDEMIE),
+    list(url = GITHUB_SOURCES$region_geojson,   dest = PATH_REGION_GEOJSON),
+    list(url = GITHUB_SOURCES$district_geojson, dest = PATH_DISTRICT_GEOJSON)
+  )
+
+  for (t in targets) {
+    if (is.null(t$url) || !nzchar(t$url) || grepl("<owner>", t$url, fixed = TRUE)) next
+    if (!force && file.exists(t$dest)) next
+
+    message("T\u00e9l\u00e9chargement : ", t$url)
+    tryCatch({
+      if (nzchar(GITHUB_PAT)) {
+        # Dépôt privé : téléchargement authentifié via l'API Contents
+        # (raw.githubusercontent.com ne supporte pas les headers d'auth
+        # de la même façon pour les dépôts privés selon les configurations).
+        utils::download.file(
+          t$url, destfile = t$dest, mode = "wb", quiet = TRUE,
+          headers = c(Authorization = paste("token", GITHUB_PAT))
+        )
+      } else {
+        utils::download.file(t$url, destfile = t$dest, mode = "wb", quiet = TRUE)
+      }
+    }, error = function(e) {
+      warning("\u00c9chec du t\u00e9l\u00e9chargement de ", t$url, " : ", conditionMessage(e))
+    })
+  }
+}
+
 refresh_all_data <- function() {
+  download_github_sources()
   load_overall_mape(force = TRUE)
   load_epidemie(force = TRUE)
   load_geo_region(force = TRUE)
