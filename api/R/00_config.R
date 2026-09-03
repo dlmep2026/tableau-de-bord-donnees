@@ -21,6 +21,29 @@ PATH_REGION_GEOJSON <- file.path(DATA_DIR, "region.geojson")
 PATH_DISTRICT_GEOJSON <- file.path(DATA_DIR, "district.geojson")
 PATH_RISK_EVAL_STORE <- file.path(DATA_DIR, "risk_evaluations_store.json")
 
+# --- Récupération des données depuis GitHub (optionnel) --------------------
+# Si USE_GITHUB_SOURCES est TRUE, chaque fichier ci-dessous est téléchargé
+# depuis son URL "raw" GitHub vers data/ avant le premier chargement (voir
+# download_github_sources() dans R/02_data_loader.R). Remplacez les URLs
+# <owner>/<repo>/<branch>/<path> par les vraies URLs "raw" de votre dépôt
+# (bouton "Raw" sur la page du fichier dans GitHub, ou clic droit > copier
+# le lien du bouton "Raw").
+USE_GITHUB_SOURCES <- TRUE
+
+GITHUB_SOURCES <- list(
+  overall_mape      = "https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>/overall_mape.xlsx",
+  ll_mpox           = "https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>/LL_MPOX.xlsx",
+  ll_cholera        = "https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>/LL_CHOLERA_NATIONAL.xlsx",
+  epidemie          = "https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>/epidemie.xlsx",
+  region_geojson    = "https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>/region.geojson",
+  district_geojson  = "https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>/district.geojson"
+)
+
+# Si le dépôt est PRIVÉ, renseignez un Personal Access Token GitHub dans la
+# variable d'environnement GITHUB_PAT (ex: export GITHUB_PAT=ghp_xxx avant
+# de lancer Rscript, ou dans un fichier .Renviron). Laissez vide si public.
+GITHUB_PAT <- Sys.getenv("GITHUB_PAT", unset = "")
+
 # --- Les 4 maladies prioritaires (obligatoire, cf. spec) --------------------
 # Nom affiché (frontend)  <->  code "variable" dans overall_mape.xlsx
 DISEASE_MAP <- c(
