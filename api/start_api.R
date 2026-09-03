@@ -26,6 +26,11 @@ if (length(missing_pkgs) > 0) {
 try(Sys.setlocale("LC_ALL", "en_US.UTF-8"), silent = TRUE)
 try(Sys.setlocale("LC_ALL", "C.UTF-8"), silent = TRUE)
 
+# Délai max pour les téléchargements GitHub (voir R/02_data_loader.R
+# ::download_github_sources()). Augmentez si votre réseau est lent ou si
+# les fichiers sont volumineux.
+options(timeout = 120)
+
 library(plumber)
 
 pr <- pr("plumber.R")
